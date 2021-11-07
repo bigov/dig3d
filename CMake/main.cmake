@@ -39,6 +39,9 @@ foreach( FILE_NAME ${IMGUI_SRC_FILES} )
   FILE( COPY "${FILE_NAME}" DESTINATION "${CMAKE_BINARY_DIR}/include/imgui" )
 endforeach()
 
+# Get spdlog
+FILE( COPY "${DIG_EXT_SRC}/spdlog/include/spdlog" DESTINATION "${CMAKE_BINARY_DIR}/include" )
+
 FILE( GLOB IMGUI_FILES "${CMAKE_BINARY_DIR}/include/imgui/*.cpp" )
 ADD_LIBRARY( imgui STATIC ${IMGUI_FILES} )
 

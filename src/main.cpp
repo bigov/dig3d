@@ -12,6 +12,9 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+#include <spdlog/async.h>
+#include <spdlog/sinks/basic_file_sink.h>
+
 #include <iostream>
 #include <dig3d_config.hpp>
 
@@ -22,15 +25,18 @@ static void error_callback(int error, const char* description)
 
 int main(int, char**)
 {
-    GLFWwindow* window;
+#ifndef NDEBUG
+  auto logger = spdlog::create_async<spdlog::sinks::basic_file_sink_mt>(
+      "DIG", "debug_log.txt");
+  logger->info("start session");
+#endif
 
-    glfwSetErrorCallback(error_callback);
+  GLFWwindow* window;
+  glfwSetErrorCallback(error_callback);
+  if (!glfwInit()) exit(EXIT_FAILURE);
 
-    if (!glfwInit())
-        exit(EXIT_FAILURE);
-
-    std::string APP_TITLE = "Dig 3D version ";
-    APP_TITLE += APP_VERSION;
+  std::string APP_TITLE = "Dig 3D version ";
+  APP_TITLE += APP_VERSION;
     
 #ifndef NDEBUG
   APP_TITLE += " [Debug]";
