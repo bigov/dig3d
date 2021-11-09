@@ -1,0 +1,5 @@
+{
+  "cmake.buildDirectory": "${workspaceFolder}/build/Debug",
+  "cmake.generator": "MinGW Makefiles",
+  "C_Cpp.errorSquiggles": "Enabled"
+}

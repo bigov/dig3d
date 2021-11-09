@@ -1,121 +1,52 @@
-/**
- * 
- * 
- */
-#define GLAD_GL_IMPLEMENTATION
-#include <glad/gl.h>
+/** Digital 3D framework 
+  
+ Copyright (c) 2021 Igor Balezin <bigov@yandex.com>
 
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
+ This software is provided 'as-is', without any express or implied
+ warranty. In no event will the authors be held liable for any damages
+ arising from the use of this software.
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_glfw.h>
-#include <imgui/imgui_impl_opengl3.h>
+ Permission is granted to anyone to use this software for any purpose,
+ including commercial applications, and to alter it and redistribute it
+ freely, subject to the following restrictions:
 
+ 1. The origin of this software must not be misrepresented; you must not
+    claim that you wrote the original software. If you use this software
+    in a product, an acknowledgment in the product documentation would
+    be appreciated but is not required.
+
+ 2. Altered source versions must be plainly marked as such, and must not
+    be misrepresented as being the original software.
+
+ 3. This notice may not be removed or altered from any source
+    distribution.
+*/
+
+#include <dig3d_config.hpp>
 #include <spdlog/async.h>
 #include <spdlog/sinks/basic_file_sink.h>
-
-#include <iostream>
-#include <dig3d_config.hpp>
-
-static void error_callback(int error, const char* description)
-{
-    fprintf(stderr, "Error %i: %s\n", error, description);
-}
+#include "glfw_cover.hpp"
 
 int main(int, char**)
 {
-#ifndef NDEBUG
-  auto logger = spdlog::create_async<spdlog::sinks::basic_file_sink_mt>(
-      "DIG", "debug_log.txt");
-  logger->info("start session");
-#endif
-
-  GLFWwindow* window;
-  glfwSetErrorCallback(error_callback);
-  if (!glfwInit()) exit(EXIT_FAILURE);
-
   std::string APP_TITLE = "Dig 3D version ";
   APP_TITLE += APP_VERSION;
     
 #ifndef NDEBUG
   APP_TITLE += " [Debug]";
+  auto logger = spdlog::create_async<spdlog::sinks::basic_file_sink_mt>(
+      "DIG", "debug_log.txt");
+  logger->info("start session");
 #else
   APP_TITLE += " [Release]";
 #endif
 
-    window = glfwCreateWindow(1000, 600, APP_TITLE.c_str(), NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        exit(EXIT_FAILURE);
-    }
+  using namespace dig3d;
 
-    glfwMakeContextCurrent(window);
-    gladLoadGL(glfwGetProcAddress);
-    glfwSwapInterval(0);
-
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    const char* glsl_version = "#version 150";
-    ImGui_ImplOpenGL3_Init(glsl_version);
-    ImVec4 clear_color = ImVec4(171.f/255, 211.f/255, 239.f/255, 1.f);
-    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-
-    while (!glfwWindowShouldClose(window))
-    {
-        glfwSwapBuffers(window);
-        glClear(GL_COLOR_BUFFER_BIT);
-        //glfwWaitEvents(); // статическое окно
-        glfwPollEvents();   // динамическая картинка
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        ImGui::SetNextWindowPos( ImVec2(2, 2) );
-        ImGui::SetNextWindowSize( ImVec2(114, 32) );
-        
-        ImGuiStyle& style = ImGui::GetStyle();
-        style.Colors[ImGuiCol_Border] = ImVec4(0.4f, 0.4f, 0.4f, 0.2f);
-        style.Colors[ImGuiCol_Text] = ImVec4(0.7f, 1.f, 0.7f, 1.f);
-        ImGui::SetNextWindowBgAlpha(0.25f);
-
-        {
-          ImGuiWindowFlags window_flags =
-            ImGuiWindowFlags_NoResize |
-            ImGuiWindowFlags_NoTitleBar |
-            ImGuiWindowFlags_NoDecoration |
-            ImGuiWindowFlags_Tooltip;
-
-          ImGui::Begin("FPS", nullptr, window_flags);
-          ImGui::Text(" FPS: %.1f ", ImGui::GetIO().Framerate);
-          ImGui::End();
-        }
-
-        ImGui::Render();
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    }
-
-    // Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    glfwTerminate();
-    exit(EXIT_SUCCESS);
+  glfw_cover App {};
+  glfw_cover::gl_win MainWin { APP_TITLE.c_str() };
+  App.init_window(MainWin);
+  MainWin.show();
+  
+  exit(EXIT_SUCCESS);
 }

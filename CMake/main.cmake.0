@@ -42,12 +42,9 @@ endforeach()
 # Get spdlog
 FILE( COPY "${DIG_EXT_SRC}/spdlog/include/spdlog" DESTINATION "${CMAKE_BINARY_DIR}/include" )
 
-# Get imgui
 FILE( GLOB IMGUI_FILES "${CMAKE_BINARY_DIR}/include/imgui/*.cpp" )
 ADD_LIBRARY( imgui STATIC ${IMGUI_FILES} )
 
-FILE( GLOB DIG3D_SOURCE_FILES "${DIG_SOURCE_DIR}/src/*.cpp" )
-# FILE( GLOB DIG3D_SOURCE_FILES "${DIG_SOURCE_DIR}/src/main.cpp" )
-add_executable( dig3d "${DIG3D_SOURCE_FILES}" )
+add_executable( dig3d "${DIG_SOURCE_DIR}/src/main.cpp" )
 add_dependencies( dig3d GLFW )
 target_link_libraries( dig3d glfw3 imgui)
