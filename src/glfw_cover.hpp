@@ -55,20 +55,20 @@ public:
 class glfw_cover
 {
   public:
-    class gl_win
+    class glfw_window
     {
       public:
-        gl_win(const char* title = "\0");
+        glfw_window(const char* title = "\0");
 
         // Запретить копирование объекта
-        gl_win(const gl_win&) = delete;
-        gl_win& operator=(const gl_win&) = delete;
+        glfw_window(const glfw_window&) = delete;
+        glfw_window& operator=(const glfw_window&) = delete;
 
         // Запретить перенос объекта
-        gl_win(gl_win&&) = delete;
-        gl_win& operator=(gl_win&&) = delete;
+        glfw_window(glfw_window&&) = delete;
+        glfw_window& operator=(glfw_window&&) = delete;
 
-        ~gl_win(void);
+        ~glfw_window(void);
 
         std::string title{};
         unsigned int width=600;
@@ -101,7 +101,7 @@ class glfw_cover
         friend class glfw_cover;
 
       private:
-        static GLFWwindow* pointer;
+        static GLFWwindow* win_ptr;
 
         static interface_gl_context* button_observer;
         static interface_gl_context* char_observer;
@@ -134,7 +134,7 @@ class glfw_cover
     
     static void set_error_observer(interface_gl_context& ref);    // отслеживание ошибок
     static void load_gl(void);
-    static void init_window(gl_win& w);
+    static void init_window(glfw_window& w);
 
   private:
     static bool gl_is_loaded;

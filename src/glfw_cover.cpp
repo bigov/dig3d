@@ -35,16 +35,16 @@ namespace dig3d
 {
 // Инициализация статических членов
 bool glfw_cover::gl_is_loaded = false;
-GLFWwindow* glfw_cover::gl_win::pointer = nullptr;
+GLFWwindow* glfw_cover::glfw_window::win_ptr = nullptr;
 interface_gl_context* glfw_cover::error_observer = nullptr;
-interface_gl_context* glfw_cover::gl_win::cursor_observer = nullptr;
-interface_gl_context* glfw_cover::gl_win::button_observer = nullptr;
-interface_gl_context* glfw_cover::gl_win::keyboard_observer = nullptr;
-interface_gl_context* glfw_cover::gl_win::position_observer = nullptr;
-interface_gl_context* glfw_cover::gl_win::size_observer = nullptr;
-interface_gl_context* glfw_cover::gl_win::char_observer = nullptr;
-interface_gl_context* glfw_cover::gl_win::close_observer = nullptr;
-interface_gl_context* glfw_cover::gl_win::focuslost_observer = nullptr;
+interface_gl_context* glfw_cover::glfw_window::cursor_observer = nullptr;
+interface_gl_context* glfw_cover::glfw_window::button_observer = nullptr;
+interface_gl_context* glfw_cover::glfw_window::keyboard_observer = nullptr;
+interface_gl_context* glfw_cover::glfw_window::position_observer = nullptr;
+interface_gl_context* glfw_cover::glfw_window::size_observer = nullptr;
+interface_gl_context* glfw_cover::glfw_window::char_observer = nullptr;
+interface_gl_context* glfw_cover::glfw_window::close_observer = nullptr;
+interface_gl_context* glfw_cover::glfw_window::focuslost_observer = nullptr;
 
 ///
 /// \brief glfw_cover::glfw_cover
@@ -62,7 +62,7 @@ glfw_cover::glfw_cover(void)
 #endif
 }
 
-glfw_cover::gl_win::gl_win(const char* row)
+glfw_cover::glfw_window::glfw_window(const char* row)
 {
   title = row;
 }
@@ -86,38 +86,38 @@ void glfw_cover::load_gl(void)
 ///
 /// Настройка окна и обработчиков ввода
 ///
-void glfw_cover::init_window(gl_win& Win)
+void glfw_cover::init_window(glfw_window& Win)
 {
-  Win.pointer = glfwCreateWindow(Win.width, Win.height, Win.title.c_str(), nullptr, nullptr);
-  glfwMakeContextCurrent(Win.pointer);
+  Win.win_ptr = glfwCreateWindow(Win.width, Win.height, Win.title.c_str(), nullptr, nullptr);
+  glfwMakeContextCurrent(Win.win_ptr);
   load_gl();
 
   glfwSetErrorCallback(callback_error);
   Win.init_callbacks();
 
-  glfwSetWindowSizeLimits(Win.pointer, static_cast<int>(Win.min_w), static_cast<int>(Win.min_h), GLFW_DONT_CARE, GLFW_DONT_CARE);
-  glfwSetWindowSize(Win.pointer, static_cast<int>(Win.width), static_cast<int>(Win.height));
-  glfwSetWindowPos(Win.pointer, static_cast<int>(Win.left), static_cast<int>(Win.top));
+  glfwSetWindowSizeLimits(Win.win_ptr, static_cast<int>(Win.min_w), static_cast<int>(Win.min_h), GLFW_DONT_CARE, GLFW_DONT_CARE);
+  glfwSetWindowSize(Win.win_ptr, static_cast<int>(Win.width), static_cast<int>(Win.height));
+  glfwSetWindowPos(Win.win_ptr, static_cast<int>(Win.left), static_cast<int>(Win.top));
 
-  glfwShowWindow(Win.pointer);
+  glfwShowWindow(Win.win_ptr);
   glfwSwapInterval(0);  // Vertical sync is "OFF". When param is 1 - will be ON
-  glfwSetInputMode(Win.pointer, GLFW_STICKY_KEYS, 0);
+  glfwSetInputMode(Win.win_ptr, GLFW_STICKY_KEYS, 0);
 }
 
 
-void glfw_cover::gl_win::init_callbacks(void)
+void glfw_cover::glfw_window::init_callbacks(void)
 {
-  glfwSetKeyCallback(pointer, callback_keyboard);
-  glfwSetCharCallback(pointer, callback_char);
-  glfwSetMouseButtonCallback(pointer, callback_button);
-  glfwSetCursorPosCallback(pointer, callback_cursor);
-  glfwSetFramebufferSizeCallback(pointer, callback_size);
-  glfwSetWindowPosCallback(pointer, callback_position);
-  glfwSetWindowCloseCallback(pointer, callback_close);
-  glfwSetWindowFocusCallback(pointer, callback_focus);
+  glfwSetKeyCallback(win_ptr, callback_keyboard);
+  glfwSetCharCallback(win_ptr, callback_char);
+  glfwSetMouseButtonCallback(win_ptr, callback_button);
+  glfwSetCursorPosCallback(win_ptr, callback_cursor);
+  glfwSetFramebufferSizeCallback(win_ptr, callback_size);
+  glfwSetWindowPosCallback(win_ptr, callback_position);
+  glfwSetWindowCloseCallback(win_ptr, callback_close);
+  glfwSetWindowFocusCallback(win_ptr, callback_focus);
 }
 
-void glfw_cover::gl_win::show(void)
+void glfw_cover::glfw_window::show(void)
 {
     // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -131,15 +131,15 @@ void glfw_cover::gl_win::show(void)
   //ImGui::StyleColorsClassic();
 
   // Setup Platform/Renderer backends
-  ImGui_ImplGlfw_InitForOpenGL(pointer, true);
+  ImGui_ImplGlfw_InitForOpenGL(win_ptr, true);
   const char* glsl_version = "#version 150";
   ImGui_ImplOpenGL3_Init(glsl_version);
   ImVec4 clear_color = ImVec4(171.f/255, 211.f/255, 239.f/255, 1.f);
   glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
 
-  while (!glfwWindowShouldClose(pointer))
+  while (!glfwWindowShouldClose(win_ptr))
     {
-        glfwSwapBuffers(pointer);
+        glfwSwapBuffers(win_ptr);
         glClear(GL_COLOR_BUFFER_BIT);
         //glfwWaitEvents(); // статическое окно
         glfwPollEvents();   // динамическая картинка
@@ -170,7 +170,7 @@ void glfw_cover::gl_win::show(void)
 
         ImGui::Render();
         int display_w, display_h;
-        glfwGetFramebufferSize(pointer, &display_w, &display_h);
+        glfwGetFramebufferSize(win_ptr, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
@@ -193,45 +193,45 @@ glfw_cover::~glfw_cover(void)
   glfwTerminate();
 }
 
-glfw_cover::gl_win::~gl_win(void)
+glfw_cover::glfw_window::~glfw_window(void)
 {
-  if(nullptr != pointer) glfwDestroyWindow(pointer);
-  pointer = nullptr;
+  if(nullptr != win_ptr) glfwDestroyWindow(win_ptr);
+  win_ptr = nullptr;
 }
 
 void glfw_cover::set_error_observer(interface_gl_context& ref)
 {
   error_observer = &ref;
 }
-void glfw_cover::gl_win::set_cursor_observer(interface_gl_context& ref)
+void glfw_cover::glfw_window::set_cursor_observer(interface_gl_context& ref)
 {
   cursor_observer = &ref;
 }
-void glfw_cover::gl_win::set_mbutton_observer(interface_gl_context& ref)
+void glfw_cover::glfw_window::set_mbutton_observer(interface_gl_context& ref)
 {
   button_observer = &ref;
 }
-void glfw_cover::gl_win::set_keyboard_observer(interface_gl_context& ref)
+void glfw_cover::glfw_window::set_keyboard_observer(interface_gl_context& ref)
 {
   keyboard_observer = &ref;
 }
-void glfw_cover::gl_win::set_position_observer(interface_gl_context& ref)
+void glfw_cover::glfw_window::set_position_observer(interface_gl_context& ref)
 {
   position_observer = &ref;
 }
-void glfw_cover::gl_win::set_size_observer(interface_gl_context& ref)
+void glfw_cover::glfw_window::set_size_observer(interface_gl_context& ref)
 {
   size_observer = &ref;
 }
-void glfw_cover::gl_win::set_char_observer(interface_gl_context& ref)
+void glfw_cover::glfw_window::set_char_observer(interface_gl_context& ref)
 {
   char_observer = &ref;
 }
-void glfw_cover::gl_win::set_close_observer(interface_gl_context& ref)
+void glfw_cover::glfw_window::set_close_observer(interface_gl_context& ref)
 {
   close_observer = &ref;
 }
-void glfw_cover::gl_win::set_focuslost_observer(interface_gl_context& ref)
+void glfw_cover::glfw_window::set_focuslost_observer(interface_gl_context& ref)
 {
   focuslost_observer = &ref;
 }
@@ -240,9 +240,9 @@ void glfw_cover::gl_win::set_focuslost_observer(interface_gl_context& ref)
 ///
 /// \brief wglfw::swap_buffers
 ///
-void glfw_cover::gl_win::swap_buffers(void)
+void glfw_cover::glfw_window::swap_buffers(void)
 {
-  glfwSwapBuffers(pointer);
+  glfwSwapBuffers(win_ptr);
   glfwPollEvents();
 }
 
@@ -250,24 +250,24 @@ void glfw_cover::gl_win::swap_buffers(void)
 ///
 /// \brief wglfw::cursor_hide
 ///
-void glfw_cover::gl_win::cursor_hide(void)
+void glfw_cover::glfw_window::cursor_hide(void)
 {
-  glfwSetInputMode(pointer, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+  glfwSetInputMode(win_ptr, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
   // отключить ввод символов
-  glfwSetCharCallback(pointer, nullptr);
+  glfwSetCharCallback(win_ptr, nullptr);
 }
 
 
 ///
 /// \brief wglfw::cursor_restore
 ///
-void glfw_cover::gl_win::cursor_restore(void)
+void glfw_cover::glfw_window::cursor_restore(void)
 {
-  glfwSetInputMode(pointer, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  glfwSetInputMode(win_ptr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
   // разрешить ввод символов
-  glfwSetCharCallback(pointer, callback_char);
+  glfwSetCharCallback(win_ptr, callback_char);
 }
 
 
@@ -276,9 +276,9 @@ void glfw_cover::gl_win::cursor_restore(void)
 /// \param x
 /// \param y
 ///
-void glfw_cover::gl_win::set_cursor_pos(double x, double y)
+void glfw_cover::glfw_window::set_cursor_pos(double x, double y)
 {
-  glfwSetCursorPos(pointer, x, y);
+  glfwSetCursorPos(win_ptr, x, y);
 }
 
 
@@ -287,9 +287,9 @@ void glfw_cover::gl_win::set_cursor_pos(double x, double y)
 /// \param width
 /// \param height
 ///
-void glfw_cover::gl_win::get_frame_size(int* width, int* height)
+void glfw_cover::glfw_window::get_frame_size(int* width, int* height)
 {
-  glfwGetFramebufferSize(pointer, width, height);
+  glfwGetFramebufferSize(win_ptr, width, height);
 }
 
 
@@ -317,7 +317,7 @@ void glfw_cover::callback_error(int error, const char* description)
 /// \param xpos  - X координата курсора в окне
 /// \param ypos  - Y координата курсора в окне
 ///
-void glfw_cover::gl_win::callback_cursor(GLFWwindow*, double x, double y)
+void glfw_cover::glfw_window::callback_cursor(GLFWwindow*, double x, double y)
 {
   if(cursor_observer != nullptr) cursor_observer->event_cursor(x, y);
 }
@@ -330,7 +330,7 @@ void glfw_cover::gl_win::callback_cursor(GLFWwindow*, double x, double y)
 /// \param action
 /// \param mods
 ///
-void glfw_cover::gl_win::callback_button(GLFWwindow*, int button, int action, int mods)
+void glfw_cover::glfw_window::callback_button(GLFWwindow*, int button, int action, int mods)
 {
   if(button_observer != nullptr) button_observer->event_mouse_btns(button, action, mods);
 }
@@ -339,7 +339,7 @@ void glfw_cover::gl_win::callback_button(GLFWwindow*, int button, int action, in
 ///
 /// Keys events callback
 ///
-void glfw_cover::gl_win::callback_keyboard(GLFWwindow*, int key, int scancode, int action, int mods)
+void glfw_cover::glfw_window::callback_keyboard(GLFWwindow*, int key, int scancode, int action, int mods)
 {
   if(keyboard_observer != nullptr) keyboard_observer->event_keyboard(key, scancode, action, mods);
 }
@@ -348,7 +348,7 @@ void glfw_cover::gl_win::callback_keyboard(GLFWwindow*, int key, int scancode, i
 ///
 /// GLFW window moving callback
 ///
-void glfw_cover::gl_win::callback_position(GLFWwindow*, int left, int top)
+void glfw_cover::glfw_window::callback_position(GLFWwindow*, int left, int top)
 {
   if(position_observer != nullptr) position_observer->event_reposition(left, top);
 }
@@ -361,7 +361,7 @@ void glfw_cover::gl_win::callback_position(GLFWwindow*, int left, int top)
 /// \param height
 /// \details GLFW framebuffer and window-data callback resize
 ///
-void glfw_cover::gl_win::callback_size(GLFWwindow*, int width, int height)
+void glfw_cover::glfw_window::callback_size(GLFWwindow*, int width, int height)
 {
   if(size_observer != nullptr) size_observer->event_resize(width, height);
 }
@@ -372,7 +372,7 @@ void glfw_cover::gl_win::callback_size(GLFWwindow*, int width, int height)
 /// \param window
 /// \param key
 ///
-void glfw_cover::gl_win::callback_char(GLFWwindow*, unsigned int ch)
+void glfw_cover::glfw_window::callback_char(GLFWwindow*, unsigned int ch)
 {
   if(char_observer != nullptr) char_observer->event_character(ch);
 }
@@ -382,7 +382,7 @@ void glfw_cover::gl_win::callback_char(GLFWwindow*, unsigned int ch)
 /// \brief wglfw::window_close_callback
 /// \param w
 ///
-void glfw_cover::gl_win::callback_close(GLFWwindow*)
+void glfw_cover::glfw_window::callback_close(GLFWwindow*)
 {
   if(close_observer != nullptr) close_observer->event_close();
 }
@@ -392,7 +392,7 @@ void glfw_cover::gl_win::callback_close(GLFWwindow*)
 /// \brief wglfw::window_focus_callback
 /// \param w
 ///
-void glfw_cover::gl_win::callback_focus(GLFWwindow*,  int focused)
+void glfw_cover::glfw_window::callback_focus(GLFWwindow*,  int focused)
 {
   if(0 == focused)
   {

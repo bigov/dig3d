@@ -44,7 +44,7 @@ int main(int, char**)
   using namespace dig3d;
 
   glfw_cover App {};
-  glfw_cover::gl_win MainWin { APP_TITLE.c_str() };
+  glfw_cover::glfw_window MainWin { APP_TITLE.c_str() };
   App.init_window(MainWin);
   MainWin.show();
   
