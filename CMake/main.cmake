@@ -26,6 +26,7 @@ ExternalProject_Add( GLFW
   SOURCE_DIR "${DIG_EXT_SRC}/glfw"
   CMAKE_ARGS ${GLFW_CMAKE_ARGS} )
 
+
 # Get imgui
 FILE( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/include/imgui" )
 FILE( GLOB IMGUI_SRC_FILES
@@ -45,9 +46,10 @@ FILE( COPY "${DIG_EXT_SRC}/spdlog/include/spdlog" DESTINATION "${CMAKE_BINARY_DI
 # Get imgui
 FILE( GLOB IMGUI_FILES "${CMAKE_BINARY_DIR}/include/imgui/*.cpp" )
 ADD_LIBRARY( imgui STATIC ${IMGUI_FILES} )
+add_dependencies( imgui GLFW )
 
 FILE( GLOB DIG3D_SOURCE_FILES "${DIG_SOURCE_DIR}/src/*.cpp" )
 # FILE( GLOB DIG3D_SOURCE_FILES "${DIG_SOURCE_DIR}/src/main.cpp" )
 add_executable( dig3d "${DIG3D_SOURCE_FILES}" )
-add_dependencies( dig3d GLFW )
+#add_dependencies( dig3d GLFW )
 target_link_libraries( dig3d glfw3 imgui)

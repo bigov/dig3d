@@ -31,7 +31,7 @@ int main(int, char**)
 {
   std::string APP_TITLE = "Dig 3D version ";
   APP_TITLE += APP_VERSION;
-    
+
 #ifndef NDEBUG
   APP_TITLE += " [Debug]";
   auto logger = spdlog::create_async<spdlog::sinks::basic_file_sink_mt>(
@@ -47,6 +47,6 @@ int main(int, char**)
   glfw_cover::glfw_window MainWin { APP_TITLE.c_str() };
   App.init_window(MainWin);
   MainWin.show();
-  
+
   exit(EXIT_SUCCESS);
 }

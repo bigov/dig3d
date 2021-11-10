@@ -33,6 +33,7 @@ rules.ninja
 
 # CMake clutter
 CMakeCache.txt
+CMakeLists.txt.user
 CMakeFiles
 CMakeScripts
 CMakeDoxyfile.in

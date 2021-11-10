@@ -26,7 +26,6 @@
 #define GLFW_COVER_HPP
 
 #include <iostream>
-#include <list>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
