@@ -1,20 +1,7 @@
 #
 # Указать тип сборки (Release|Debug):
 #
-#   cmake -DCMAKE_BUILD_TYPE=Release ../ -G "MinGW Makefiles"
-#
-# Потом:
-#   cmake --build .
-#
-#
-# Под Linux можно собрать так:
-#   cmake --clean . && cmake -DCMAKE_BUILD_TYPE=Debug ../ && cmake --build . && ./app_dbg
-#   cmake --clean . && cmake -DCMAKE_BUILD_TYPE=Release ../ && cmake --build . && ./app_rel
-#
-# Сборка с использование Clang:
-#   CC="clang" CXX="clang++" cmake ../ && cmake --build .
-#
-# https://cmake.org/Wiki/CMake_Useful_Variables
+#   cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Release ../../
 #
 
 cmake_minimum_required( VERSION "3.15" )
@@ -67,5 +54,5 @@ elseif()
   SET( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -no-pie" )
 endif()
 
-configure_file( "${DIG_SOURCE_DIR}/CMake/config.h.in" "${CMAKE_BINARY_DIR}/include/dig3d_config.hpp" )
+configure_file( "${DIG_SOURCE_DIR}/CMake/config.h.in" "${CMAKE_BINARY_DIR}/include/config.h" )
 include( "${DIG_SOURCE_DIR}/CMake/main.cmake" )

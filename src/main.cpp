@@ -22,10 +22,11 @@
     distribution.
 */
 
-#include <dig3d_config.hpp>
+#include <config.h>
 #include <spdlog/async.h>
 #include <spdlog/sinks/basic_file_sink.h>
-#include "glfw_cover.hpp"
+#include "glfw_cover.h"
+
 
 int main(int, char**)
 {
@@ -41,12 +42,7 @@ int main(int, char**)
   APP_TITLE += " [Release]";
 #endif
 
-  using namespace dig3d;
-
-  glfw_cover App {};
-  glfw_cover::glfw_window MainWin { APP_TITLE.c_str() };
-  App.init_window(MainWin);
-  MainWin.show();
+  dig3d::dig3dapp MyApp{APP_TITLE};
 
   exit(EXIT_SUCCESS);
 }

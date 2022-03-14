@@ -29,22 +29,35 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
-#include "glfw_cover.hpp"
+#include "glfw_cover.h"
 
 namespace dig3d
 {
 // Инициализация статических членов
 bool glfw_cover::gl_is_loaded = false;
-GLFWwindow* glfw_cover::glfw_window::win_ptr = nullptr;
+GLFWwindow* glfw_window::win_ptr = nullptr;
 interface_gl_context* glfw_cover::error_observer = nullptr;
-interface_gl_context* glfw_cover::glfw_window::cursor_observer = nullptr;
-interface_gl_context* glfw_cover::glfw_window::button_observer = nullptr;
-interface_gl_context* glfw_cover::glfw_window::keyboard_observer = nullptr;
-interface_gl_context* glfw_cover::glfw_window::position_observer = nullptr;
-interface_gl_context* glfw_cover::glfw_window::size_observer = nullptr;
-interface_gl_context* glfw_cover::glfw_window::char_observer = nullptr;
-interface_gl_context* glfw_cover::glfw_window::close_observer = nullptr;
-interface_gl_context* glfw_cover::glfw_window::focuslost_observer = nullptr;
+interface_gl_context* glfw_window::cursor_observer = nullptr;
+interface_gl_context* glfw_window::button_observer = nullptr;
+interface_gl_context* glfw_window::keyboard_observer = nullptr;
+interface_gl_context* glfw_window::position_observer = nullptr;
+interface_gl_context* glfw_window::size_observer = nullptr;
+interface_gl_context* glfw_window::char_observer = nullptr;
+interface_gl_context* glfw_window::close_observer = nullptr;
+interface_gl_context* glfw_window::focuslost_observer = nullptr;
+
+
+dig3dapp::dig3dapp(std::string Title)
+{
+  MainWin = &GlfwCover.create_window(Title.c_str());
+  MainWin->set_keyboard_observer(*this);
+  MainWin->show();
+}
+
+void dig3dapp::event_keyboard(int, int, int, int)
+{
+  GlfwCover.delete_window(*MainWin);
+}
 
 ///
 /// \brief glfw_cover::glfw_cover
@@ -62,7 +75,7 @@ glfw_cover::glfw_cover(void)
 #endif
 }
 
-glfw_cover::glfw_window::glfw_window(const char* row)
+glfw_window::glfw_window(const char* row)
 {
   title = row;
 }
@@ -74,11 +87,8 @@ glfw_cover::glfw_window::glfw_window(const char* row)
 void glfw_cover::load_gl(void)
 {
   if(gl_is_loaded) return;
-  gladLoadGL(glfwGetProcAddress);
-  //if(!gladLoadGLLoader(GLADloadproc(glfwGetProcAddress)))
-  //{
-  //  if(!gladLoadGL()) std::cerr << "Critical error: can't load GLAD." << std::endl;
- // }
+  if (gladLoadGL(glfwGetProcAddress) == 0)
+    std::cerr << "Critical error: can't load GLAD." << std::endl;
   gl_is_loaded = true;
 }
 
@@ -86,26 +96,47 @@ void glfw_cover::load_gl(void)
 ///
 /// Настройка окна и обработчиков ввода
 ///
-void glfw_cover::init_window(glfw_window& Win)
+glfw_window& glfw_cover::create_window(const char* row)
 {
-  Win.win_ptr = glfwCreateWindow(Win.width, Win.height, Win.title.c_str(), nullptr, nullptr);
-  glfwMakeContextCurrent(Win.win_ptr);
+  AppWindows.emplace_back(row);
+  glfw_window& WinRef = AppWindows.back();
+
+  WinRef.win_ptr = glfwCreateWindow(WinRef.width, WinRef.height, WinRef.title.c_str(), nullptr, nullptr);
+  glfwMakeContextCurrent(WinRef.win_ptr);
   load_gl();
 
   glfwSetErrorCallback(callback_error);
-  Win.init_callbacks();
+  WinRef.init_callbacks();
 
-  glfwSetWindowSizeLimits(Win.win_ptr, static_cast<int>(Win.min_w), static_cast<int>(Win.min_h), GLFW_DONT_CARE, GLFW_DONT_CARE);
-  glfwSetWindowSize(Win.win_ptr, static_cast<int>(Win.width), static_cast<int>(Win.height));
-  glfwSetWindowPos(Win.win_ptr, static_cast<int>(Win.left), static_cast<int>(Win.top));
+  glfwSetWindowSizeLimits(WinRef.win_ptr, static_cast<int>(WinRef.min_w), static_cast<int>(WinRef.min_h), GLFW_DONT_CARE, GLFW_DONT_CARE);
+  glfwSetWindowSize(WinRef.win_ptr, static_cast<int>(WinRef.width), static_cast<int>(WinRef.height));
+  glfwSetWindowPos(WinRef.win_ptr, static_cast<int>(WinRef.left), static_cast<int>(WinRef.top));
 
-  glfwShowWindow(Win.win_ptr);
+  glfwShowWindow(WinRef.win_ptr);
   glfwSwapInterval(0);  // Vertical sync is "OFF". When param is 1 - will be ON
-  glfwSetInputMode(Win.win_ptr, GLFW_STICKY_KEYS, 0);
+  glfwSetInputMode(WinRef.win_ptr, GLFW_STICKY_KEYS, 0);
+  return WinRef;
 }
 
 
-void glfw_cover::glfw_window::init_callbacks(void)
+void glfw_cover::delete_window(glfw_window& Window)
+{
+  glfwMakeContextCurrent(nullptr);
+  if(AppWindows.empty()) return;
+
+  auto it = std::find_if(AppWindows.begin(), AppWindows.end(),
+                         [&Window](const auto& itWin){ return itWin.win_ptr == Window.win_ptr; });
+
+  glfwSetWindowShouldClose(it->win_ptr, GL_TRUE);
+  // Если есть, то удалить
+  if(it != AppWindows.end())
+  {
+    AppWindows.erase(it);
+  }
+
+}
+
+void glfw_window::init_callbacks(void)
 {
   glfwSetKeyCallback(win_ptr, callback_keyboard);
   glfwSetCharCallback(win_ptr, callback_char);
@@ -117,14 +148,13 @@ void glfw_cover::glfw_window::init_callbacks(void)
   glfwSetWindowFocusCallback(win_ptr, callback_focus);
 }
 
-void glfw_cover::glfw_window::show(void)
+
+void glfw_window::show(void)
 {
-    // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGuiIO& io = ImGui::GetIO(); (void)io;
-  //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-  //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+  [[maybe_unused]] ImGuiIO& io = ImGui::GetIO();
+  //(void)io;
 
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
@@ -139,11 +169,6 @@ void glfw_cover::glfw_window::show(void)
 
   while (!glfwWindowShouldClose(win_ptr))
     {
-        glfwSwapBuffers(win_ptr);
-        glClear(GL_COLOR_BUFFER_BIT);
-        //glfwWaitEvents(); // статическое окно
-        glfwPollEvents();   // динамическая картинка
-
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -173,15 +198,17 @@ void glfw_cover::glfw_window::show(void)
         glfwGetFramebufferSize(win_ptr, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        glfwSwapBuffers(win_ptr);
+        glClear(GL_COLOR_BUFFER_BIT);
+        //glfwWaitEvents(); // статическое окно
+        glfwPollEvents();   // динамическая картинка
     }
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
-
-    glfwTerminate();
-
 }
 
 
@@ -190,10 +217,13 @@ void glfw_cover::glfw_window::show(void)
 ///
 glfw_cover::~glfw_cover(void)
 {
+  if(!AppWindows.empty())
+    for(auto& Window: AppWindows) delete_window(Window);
   glfwTerminate();
 }
 
-glfw_cover::glfw_window::~glfw_window(void)
+
+glfw_window::~glfw_window(void)
 {
   if(nullptr != win_ptr) glfwDestroyWindow(win_ptr);
   win_ptr = nullptr;
@@ -203,35 +233,35 @@ void glfw_cover::set_error_observer(interface_gl_context& ref)
 {
   error_observer = &ref;
 }
-void glfw_cover::glfw_window::set_cursor_observer(interface_gl_context& ref)
+void glfw_window::set_cursor_observer(interface_gl_context& ref)
 {
   cursor_observer = &ref;
 }
-void glfw_cover::glfw_window::set_mbutton_observer(interface_gl_context& ref)
+void glfw_window::set_mbutton_observer(interface_gl_context& ref)
 {
   button_observer = &ref;
 }
-void glfw_cover::glfw_window::set_keyboard_observer(interface_gl_context& ref)
+void glfw_window::set_keyboard_observer(interface_gl_context& ref)
 {
   keyboard_observer = &ref;
 }
-void glfw_cover::glfw_window::set_position_observer(interface_gl_context& ref)
+void glfw_window::set_position_observer(interface_gl_context& ref)
 {
   position_observer = &ref;
 }
-void glfw_cover::glfw_window::set_size_observer(interface_gl_context& ref)
+void glfw_window::set_size_observer(interface_gl_context& ref)
 {
   size_observer = &ref;
 }
-void glfw_cover::glfw_window::set_char_observer(interface_gl_context& ref)
+void glfw_window::set_char_observer(interface_gl_context& ref)
 {
   char_observer = &ref;
 }
-void glfw_cover::glfw_window::set_close_observer(interface_gl_context& ref)
+void glfw_window::set_close_observer(interface_gl_context& ref)
 {
   close_observer = &ref;
 }
-void glfw_cover::glfw_window::set_focuslost_observer(interface_gl_context& ref)
+void glfw_window::set_focuslost_observer(interface_gl_context& ref)
 {
   focuslost_observer = &ref;
 }
@@ -240,7 +270,7 @@ void glfw_cover::glfw_window::set_focuslost_observer(interface_gl_context& ref)
 ///
 /// \brief wglfw::swap_buffers
 ///
-void glfw_cover::glfw_window::swap_buffers(void)
+void glfw_window::swap_buffers(void)
 {
   glfwSwapBuffers(win_ptr);
   glfwPollEvents();
@@ -250,7 +280,7 @@ void glfw_cover::glfw_window::swap_buffers(void)
 ///
 /// \brief wglfw::cursor_hide
 ///
-void glfw_cover::glfw_window::cursor_hide(void)
+void glfw_window::cursor_hide(void)
 {
   glfwSetInputMode(win_ptr, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
@@ -262,7 +292,7 @@ void glfw_cover::glfw_window::cursor_hide(void)
 ///
 /// \brief wglfw::cursor_restore
 ///
-void glfw_cover::glfw_window::cursor_restore(void)
+void glfw_window::cursor_restore(void)
 {
   glfwSetInputMode(win_ptr, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
@@ -276,7 +306,7 @@ void glfw_cover::glfw_window::cursor_restore(void)
 /// \param x
 /// \param y
 ///
-void glfw_cover::glfw_window::set_cursor_pos(double x, double y)
+void glfw_window::set_cursor_pos(double x, double y)
 {
   glfwSetCursorPos(win_ptr, x, y);
 }
@@ -287,7 +317,7 @@ void glfw_cover::glfw_window::set_cursor_pos(double x, double y)
 /// \param width
 /// \param height
 ///
-void glfw_cover::glfw_window::get_frame_size(int* width, int* height)
+void glfw_window::get_frame_size(int* width, int* height)
 {
   glfwGetFramebufferSize(win_ptr, width, height);
 }
@@ -317,7 +347,7 @@ void glfw_cover::callback_error(int error, const char* description)
 /// \param xpos  - X координата курсора в окне
 /// \param ypos  - Y координата курсора в окне
 ///
-void glfw_cover::glfw_window::callback_cursor(GLFWwindow*, double x, double y)
+void glfw_window::callback_cursor(GLFWwindow*, double x, double y)
 {
   if(cursor_observer != nullptr) cursor_observer->event_cursor(x, y);
 }
@@ -330,7 +360,7 @@ void glfw_cover::glfw_window::callback_cursor(GLFWwindow*, double x, double y)
 /// \param action
 /// \param mods
 ///
-void glfw_cover::glfw_window::callback_button(GLFWwindow*, int button, int action, int mods)
+void glfw_window::callback_button(GLFWwindow*, int button, int action, int mods)
 {
   if(button_observer != nullptr) button_observer->event_mouse_btns(button, action, mods);
 }
@@ -339,7 +369,7 @@ void glfw_cover::glfw_window::callback_button(GLFWwindow*, int button, int actio
 ///
 /// Keys events callback
 ///
-void glfw_cover::glfw_window::callback_keyboard(GLFWwindow*, int key, int scancode, int action, int mods)
+void glfw_window::callback_keyboard(GLFWwindow*, int key, int scancode, int action, int mods)
 {
   if(keyboard_observer != nullptr) keyboard_observer->event_keyboard(key, scancode, action, mods);
 }
@@ -348,7 +378,7 @@ void glfw_cover::glfw_window::callback_keyboard(GLFWwindow*, int key, int scanco
 ///
 /// GLFW window moving callback
 ///
-void glfw_cover::glfw_window::callback_position(GLFWwindow*, int left, int top)
+void glfw_window::callback_position(GLFWwindow*, int left, int top)
 {
   if(position_observer != nullptr) position_observer->event_reposition(left, top);
 }
@@ -361,7 +391,7 @@ void glfw_cover::glfw_window::callback_position(GLFWwindow*, int left, int top)
 /// \param height
 /// \details GLFW framebuffer and window-data callback resize
 ///
-void glfw_cover::glfw_window::callback_size(GLFWwindow*, int width, int height)
+void glfw_window::callback_size(GLFWwindow*, int width, int height)
 {
   if(size_observer != nullptr) size_observer->event_resize(width, height);
 }
@@ -372,7 +402,7 @@ void glfw_cover::glfw_window::callback_size(GLFWwindow*, int width, int height)
 /// \param window
 /// \param key
 ///
-void glfw_cover::glfw_window::callback_char(GLFWwindow*, unsigned int ch)
+void glfw_window::callback_char(GLFWwindow*, unsigned int ch)
 {
   if(char_observer != nullptr) char_observer->event_character(ch);
 }
@@ -382,7 +412,7 @@ void glfw_cover::glfw_window::callback_char(GLFWwindow*, unsigned int ch)
 /// \brief wglfw::window_close_callback
 /// \param w
 ///
-void glfw_cover::glfw_window::callback_close(GLFWwindow*)
+void glfw_window::callback_close(GLFWwindow*)
 {
   if(close_observer != nullptr) close_observer->event_close();
 }
@@ -392,7 +422,7 @@ void glfw_cover::glfw_window::callback_close(GLFWwindow*)
 /// \brief wglfw::window_focus_callback
 /// \param w
 ///
-void glfw_cover::glfw_window::callback_focus(GLFWwindow*,  int focused)
+void glfw_window::callback_focus(GLFWwindow*,  int focused)
 {
   if(0 == focused)
   {

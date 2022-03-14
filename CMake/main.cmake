@@ -26,6 +26,7 @@ ExternalProject_Add( GLFW
   SOURCE_DIR "${DIG_EXT_SRC}/glfw"
   CMAKE_ARGS ${GLFW_CMAKE_ARGS} )
 
+FILE( COPY "${DIG_EXT_SRC}/glfw/include/GLFW" DESTINATION "${CMAKE_BINARY_DIR}/include" )
 
 # Get imgui
 FILE( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/include/imgui" )
@@ -35,18 +36,17 @@ FILE( GLOB IMGUI_SRC_FILES
   "${DIG_EXT_SRC}/imgui/backends/imgui_impl_glfw.*"
   "${DIG_EXT_SRC}/imgui/backends/imgui_impl_opengl3.*"
   "${DIG_EXT_SRC}/imgui/backends/imgui_impl_opengl3_loader.h"
-  )
+)
 foreach( FILE_NAME ${IMGUI_SRC_FILES} )
   FILE( COPY "${FILE_NAME}" DESTINATION "${CMAKE_BINARY_DIR}/include/imgui" )
 endforeach()
+FILE( GLOB IMGUI_FILES "${CMAKE_BINARY_DIR}/include/imgui/*.cpp" )
+ADD_LIBRARY( imgui STATIC ${IMGUI_FILES} )
+
+add_dependencies( imgui GLFW )
 
 # Get spdlog
 FILE( COPY "${DIG_EXT_SRC}/spdlog/include/spdlog" DESTINATION "${CMAKE_BINARY_DIR}/include" )
-
-# Get imgui
-FILE( GLOB IMGUI_FILES "${CMAKE_BINARY_DIR}/include/imgui/*.cpp" )
-ADD_LIBRARY( imgui STATIC ${IMGUI_FILES} )
-add_dependencies( imgui GLFW )
 
 FILE( GLOB DIG3D_SOURCE_FILES "${DIG_SOURCE_DIR}/src/*.cpp" )
 # FILE( GLOB DIG3D_SOURCE_FILES "${DIG_SOURCE_DIR}/src/main.cpp" )
